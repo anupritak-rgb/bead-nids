@@ -666,50 +666,34 @@ analysis in~\cite{b15}.
 % -------------------------------------------------------
 \section{Discussion}
 
-\subsection{NSL-KDD Dataset Limitations}
+\subsection{Limitations}
 \label{sec:limits}
 
-NSL-KDD~\cite{b9} was constructed from 1999 KDD Cup traffic and does not
-contain TLS~1.3 or QUIC flows. Accordingly, the evaluation validates the
-statistical separability of Benford conformity scores across attack
-categories, not the full operational performance on contemporary encrypted
-traffic. The packet-size reconstruction from per-connection byte counts
-introduces approximation error relative to true packet-level captures.
-Future validation on modern datasets containing TLS flows, such as
-CIC-IDS2017~\cite{b19} or UNSW-NB15~\cite{b20}, is required to confirm
-operational performance. The architecture itself is dataset-agnostic: it
-operates identically on any packet stream regardless of encryption, because
-it never inspects payload content.
+NSL-KDD~\cite{b9} predates TLS~1.3 and QUIC; results therefore validate
+statistical separability of Benford scores rather than full operational
+performance on contemporary encrypted traffic. Packet-size reconstruction
+from per-connection byte counts introduces bounded approximation error,
+and the UNSW-NB15 cross-validation (Table~\ref{tab:unswnb15}) partially
+addresses the dataset-currency gap. Enterprise networks with high
+bulk-transfer proportions (backups, media delivery) may exhibit lower
+baseline Benford conformity, elevating false-positive rates; a $\sim$24-hour
+site-specific profiling phase before activating detection is recommended.
 
 \subsection{Adversarial Threat Model}
 
-The threat model assumes an adversary with full knowledge of the detection
-algorithm (Kerckhoffs-style transparency) and the ability to modify packet
-sizes within a single flow. Under this strong adversary model, an evasion
-attempt requires simultaneously: (1) maintaining digit frequencies
-$p_i \approx b_i$ for all $i \in \{1,\ldots,9\}$ to keep MAD $< 0.015$;
-and (2) maintaining $|H_{\text{obs}} - H_B| < \epsilon$ for some small
-$\epsilon$ to suppress the entropy term. Condition (1) constrains the
-digit-1 frequency to approximately $30\%$ of packets, while condition (2)
-constrains the full distributional shape. Satisfying both simultaneously
-using an optimization-based sampler is in principle possible but requires
-a non-trivial per-flow overhead; the injected jitter will also perturb
-inter-arrival timing, which the KS test on the IAT sequence exploits as a
-secondary detection channel. A formal evasion cost analysis constitutes
-a direction for future work.
-
-\subsection{Traffic Composition Sensitivity}
-
-Enterprise networks with high proportions of bulk file transfers, such as
-backup and media delivery workloads, may exhibit lower baseline Benford
-conformity, potentially inflating false positive rates. Site-specific
-threshold calibration during an initial profiling phase of approximately
-24 hours before active detection is engaged is therefore recommended.
+Under full Kerckhoffs-style adversary transparency, evasion requires
+simultaneously satisfying: (1) $p_i \approx b_i$ for all
+$i \in \{1,\ldots,9\}$ to keep MAD~$<0.015$; and (2)
+$|H_{\text{obs}} - H_B| < \epsilon$ to suppress the entropy term.
+Condition~(1) fixes the digit-1 frequency to $\approx 30\%$; condition~(2)
+constrains the full distributional shape. Any optimization-based sampler
+satisfying both imposes non-trivial per-flow overhead, and the induced
+jitter perturbs IATs which the KS test exploits as a secondary channel.
+Formal evasion-cost analysis remains a future direction.
 
 \subsection{Window-Size Sensitivity}
 
-Table~\ref{tab:window} reports the effect of varying the sliding-window
-width $w$ on F1 and FPR, measured on NSL-KDD under standard conditions.
+Table~\ref{tab:window} reports F1 and FPR across window widths on NSL-KDD.
 
 \begin{table}[h]
 \caption{Sensitivity to Sliding-Window Width}
@@ -729,25 +713,16 @@ $w$ (packets) & \textbf{F1} & \textbf{FPR} & \textbf{Latency (pkts)} \\
 \end{tabular}
 \end{table}
 
-F1 improves with larger windows due to more reliable digit-frequency
-estimation, but the gains diminish beyond $w = 1000$ packets while
-detection latency grows linearly. For low-rate attacks where
-inter-arrival spacing is large, the $w = 500$ setting provides a
-practical balance. The default $w = 1000$ is therefore a conservative
-choice that can be reduced for latency-sensitive deployments at a modest
-cost in precision.
+F1 gains plateau beyond $w=1000$ while latency grows linearly; $w=500$
+suits latency-sensitive deployments at a modest precision cost.
 
 \subsection{Encryption Agnosticism and Explainability}
 
-Because BEAD processes only flow-level metadata (packet sizes at the
-transport layer and inter-arrival timestamps), it operates identically
-on plaintext and TLS~1.3 or QUIC-encrypted flows~\cite{b10}. This
-property is architecturally guaranteed and does not degrade as
-encryption standards evolve. Each detection event is accompanied by a
-decomposed report specifying $\chi^2$, MAD, and entropy-deviation scores
-individually, enabling SOC analysts to distinguish DoS attacks (high MAD,
-moderate entropy deviation) from mimicry attempts (low MAD, high entropy
-deviation)~\cite{b18}.
+BEAD processes only transport-layer metadata and therefore operates
+identically on plaintext and TLS~1.3/QUIC flows~\cite{b10}. Per-alert
+decomposition into $\chi^2$, MAD, and entropy-deviation scores enables
+SOC analysts to distinguish DoS (high MAD) from mimicry attempts
+(low MAD, elevated entropy deviation)~\cite{b18}.
 
 % -------------------------------------------------------
 \section{Conclusion}
