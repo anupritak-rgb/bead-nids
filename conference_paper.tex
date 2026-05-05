@@ -538,7 +538,7 @@ Draper-Gil et al.$^{\dagger}$~\cite{b24} &
 \end{tabular}
 \end{table}
 
-The BEAD achieves F1 of 0.940 without any labeled training, a
+BEAD achieves an F1 of 0.940 without any labeled training, a
 6.8 percentage-point improvement over the single-dimensional Benford MAD
 baseline. The gap between the proposed label-free method and supervised
 RF/LSTM ($\Delta\text{F1} \approx 0.006$) is within statistical overlap,
@@ -581,7 +581,7 @@ mimicry conditions simultaneously.
 
 Under the synthetic mimicry conditions described in Section~IV-A, the pure
 MAD detector degrades to F1 of 0.612 as artificially engineered digit
-distributions conform to Benford expectations. The BEAD retains
+distributions conform to Benford expectations. BEAD retains
 F1 of 0.891, a 27.9 percentage-point recovery. This constitutes the
 principal quantitative result: the dual-constraint evasion barrier is
 empirically effective against the specific adversarial strategy of
@@ -590,7 +590,7 @@ Benford-conforming size injection.
 \subsection{Computational Overhead}
 
 On a commodity ARM Cortex-A72 processor representative of IoT gateway
-hardware, the BEAD sustains 148,000 packets per second throughput
+hardware, BEAD sustains 148,000 packets per second throughput
 with a mean per-packet latency of $6.7\,\mu$s. Kitsune~\cite{b14} achieves
 approximately 12,400 packets per second on equivalent hardware due to the
 autoencoder forward pass, confirming the suitability of the proposed
@@ -673,8 +673,7 @@ surveyed in~\cite{b18}.
 
 The paper presented a label-free, training-free NIDS grounded in
 Newcomb--Benford's Law, augmented by Shannon Entropy analysis to provide
-principled resistance against mimicry attacks. The Entropic Benford Hybrid
-Engine constructs a two-dimensional evasion barrier that adversaries cannot
+principled resistance against mimicry attacks. BEAD constructs a two-dimensional evasion barrier that adversaries cannot
 simultaneously satisfy without exposing computational signatures. The
 four-layer modular architecture achieves \(O(n)\) complexity, operates
 without payload decryption, and produces SIEM-compatible structured alerts.
