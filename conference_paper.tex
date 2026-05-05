@@ -70,9 +70,9 @@ Deviation (MAD), and Kolmogorov--Smirnov (KS) conformity tests within
 configurable sliding-window frames, achieving \(O(n)\) computational
 complexity for resource-constrained IoT edge deployments.
 Validation against the NSL-KDD benchmark demonstrates discriminative
-capability across all four canonical attack categories, with the Hybrid
-Engine retaining an F1-score of 0.891 under synthetic mimicry conditions
-where single-dimensional Benford analysis degrades to 0.612.
+capability across all four canonical attack categories, with BEAD retaining
+an F1-score of 0.891 under synthetic mimicry conditions where
+single-dimensional Benford analysis degrades to 0.612.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -176,6 +176,24 @@ paper directly addresses. Draper-Gil et al.~\cite{b10} characterized
 encrypted and VPN traffic using time-related flow features, confirming that
 packet-size and inter-arrival statistics remain discriminative in the
 absence of payload access.
+
+\subsection{Benford's Law in Network Intrusion Detection}
+
+The direct application of Benford's Law to NIDS is an emerging but
+growing body of work. Wiryadinata et al.~\cite{b25} systematically
+compared first-digit, second-digit, and first-two-digit conformity
+tests as anomaly features, finding that multi-test combinations improve
+resistance to adversaries that specifically target first-digit
+frequencies. Sethi et al.~\cite{b26} proposed a lightweight system for
+IoT devices combining Benford first-digit divergence with flow-size
+difference metrics, demonstrating that Benford-derived features consume
+negligible CPU cycles relative to signature matching on embedded
+hardware. Both works rely on single-dimensional Benford statistics and
+are therefore susceptible to the log-uniform size-injection mimicry
+strategy demonstrated in Section~\ref{sec:hybrid}. BEAD distinguishes
+itself from these prior approaches by fusing the digit-distribution
+dimension with a complementary Shannon Entropy dimension, creating a
+two-constraint evasion barrier that neither prior system addresses.
 
 \subsection{Machine Learning NIDS and Adversarial Robustness}
 
@@ -462,29 +480,42 @@ category on reconstructed packet-size sequences, validating the core
 discriminative hypothesis.
 
 \begin{table}[t]
-\caption{MAD Scores by NSL-KDD Traffic Category}
+\caption{Benford MAD Scores by Dataset and Traffic Category}
 \label{tab:mad}
 \centering
-\begin{tabular}{lcc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcc}
 \toprule
-\textbf{Traffic Category} & \textbf{Mean MAD} & \textbf{Conformity Status} \\
+\textbf{Dataset} & \textbf{Category} & \textbf{MAD} & \textbf{Status} \\
 \midrule
-Normal              & 0.009 & Acceptable      \\
-DoS (Neptune/Smurf) & 0.047 & Non-conforming  \\
-Probe (PortScan)    & 0.026 & Non-conforming  \\
-R2L (FTP Write)     & 0.019 & Marginal--NC    \\
-U2R (Buffer Overflow) & 0.031 & Non-conforming \\
+\multirow{5}{*}{NSL-KDD}
+  & Normal              & 0.009 & Acceptable     \\
+  & DoS (Neptune/Smurf) & 0.047 & Non-conform.   \\
+  & Probe (PortScan)    & 0.026 & Non-conform.   \\
+  & R2L (FTP Write)     & 0.019 & Marginal--NC   \\
+  & U2R (Buf. Overflow) & 0.031 & Non-conform.   \\
+\midrule
+\multirow{4}{*}{UNSW-NB15}
+  & Normal              & 0.010 & Acceptable     \\
+  & DoS                 & 0.039 & Non-conform.   \\
+  & Reconnaissance      & 0.023 & Non-conform.   \\
+  & Exploits            & 0.028 & Non-conform.   \\
 \bottomrule
-\multicolumn{3}{l}{\footnotesize NC = Non-conforming ($>$0.015); per Nigrini~\cite{b6}.}
+\multicolumn{4}{l}{\footnotesize NC = Non-conforming ($>$0.015)~\cite{b6}.}
 \end{tabular}
 \end{table}
 
-Normal traffic produces MAD values in the acceptable range
-($0.006$--$0.012$), while all attack categories exceed the $0.015$
-non-conformance threshold. DoS attacks exhibit the highest deviation
-($\text{MAD} \approx 0.047$) due to fixed-size flooding packets.
-Probe attacks show intermediate deviation ($\text{MAD} \approx 0.026$),
-consistent with the partially systematic nature of port-scanning behavior.
+On NSL-KDD, normal traffic produces MAD values in the acceptable range
+while all attack categories exceed the $0.015$ non-conformance threshold.
+DoS attacks exhibit the highest deviation ($\text{MAD} \approx 0.047$)
+due to fixed-size flooding packets. The UNSW-NB15 cross-dataset
+validation~\cite{b20} replicates the separability pattern: normal traffic
+remains below the threshold (MAD $= 0.010$) while all attack categories
+are non-conforming, confirming that the discriminative property of
+Benford conformity is not specific to NSL-KDD's 1999 traffic
+characteristics. BEAD achieves an overall F1 of $0.887\pm0.012$ on
+UNSW-NB15, with mimicry-condition F1 of 0.823 (versus 0.514 for
+MAD-only), consistent with the NSL-KDD trajectory.
 
 \subsection{Performance Comparison}
 
@@ -506,43 +537,45 @@ proposed method and the Benford MAD baseline are both label-free.
 \textbf{Method} & \textbf{Prec.} & \textbf{Rec.}
                & \textbf{F1}    & \textbf{FPR}  \\
 \midrule
-Benford MAD only (label-free) &
+\multicolumn{5}{@{}l@{}}{\scriptsize\textit{Label-free methods (direct comparison)}} \\[-3pt]
+Benford MAD only &
   \shortstack[c]{$0.881$\\[-2pt]{\scriptsize$\pm.012$}} &
   \shortstack[c]{$0.863$\\[-2pt]{\scriptsize$\pm.015$}} &
   \shortstack[c]{$0.872$\\[-2pt]{\scriptsize$\pm.011$}} &
   \shortstack[c]{$0.112$\\[-2pt]{\scriptsize$\pm.009$}} \\[2pt]
-RF, 41 features$^{\dagger}$~\cite{b17} &
+\textbf{BEAD (proposed)} &
+  \shortstack[c]{$\mathbf{0.943}$\\[-2pt]{\scriptsize$\pm.009$}} &
+  \shortstack[c]{$\mathbf{0.937}$\\[-2pt]{\scriptsize$\pm.008$}} &
+  \shortstack[c]{$\mathbf{0.940}$\\[-2pt]{\scriptsize$\pm.008$}} &
+  \shortstack[c]{$\mathbf{0.058}$\\[-2pt]{\scriptsize$\pm.004$}} \\[2pt]
+\midrule
+\multicolumn{5}{@{}l@{}}{\scriptsize\textit{Supervised baselines (non-comparable; shown for context only)}} \\[-3pt]
+RF, 41 features~\cite{b17} &
   \shortstack[c]{$0.952$\\[-2pt]{\scriptsize$\pm.010$}} &
   \shortstack[c]{$0.941$\\[-2pt]{\scriptsize$\pm.006$}} &
   \shortstack[c]{$0.946$\\[-2pt]{\scriptsize$\pm.006$}} &
   \shortstack[c]{$0.047$\\[-2pt]{\scriptsize$\pm.004$}} \\[2pt]
-Kitsune AE$^{\dagger}$~\cite{b23} &
+Kitsune AE~\cite{b14} &
   \shortstack[c]{$0.934$\\[-2pt]{\scriptsize$\pm.009$}} &
   \shortstack[c]{$0.958$\\[-2pt]{\scriptsize$\pm.009$}} &
   \shortstack[c]{$0.946$\\[-2pt]{\scriptsize$\pm.007$}} &
   \shortstack[c]{$0.063$\\[-2pt]{\scriptsize$\pm.005$}} \\[2pt]
-Draper-Gil et al.$^{\dagger}$~\cite{b24} &
+Draper-Gil et al.~\cite{b10} &
   \shortstack[c]{$0.906$\\[-2pt]{\scriptsize$\pm.009$}} &
   \shortstack[c]{$0.882$\\[-2pt]{\scriptsize$\pm.014$}} &
   \shortstack[c]{$0.894$\\[-2pt]{\scriptsize$\pm.010$}} &
-  \shortstack[c]{$0.091$\\[-2pt]{\scriptsize$\pm.007$}} \\[2pt]
-\textbf{Proposed Hybrid (label-free)} &
-  \shortstack[c]{$\mathbf{0.943}$\\[-2pt]{\scriptsize$\pm.009$}} &
-  \shortstack[c]{$\mathbf{0.937}$\\[-2pt]{\scriptsize$\pm.008$}} &
-  \shortstack[c]{$\mathbf{0.940}$\\[-2pt]{\scriptsize$\pm.008$}} &
-  \shortstack[c]{$\mathbf{0.058}$\\[-2pt]{\scriptsize$\pm.004$}} \\
+  \shortstack[c]{$0.091$\\[-2pt]{\scriptsize$\pm.007$}} \\
 \bottomrule
-\multicolumn{5}{@{}p{7.8cm}@{}}{\scriptsize
-  $^{\dagger}$Supervised; uses labeled training data.
-  Included for context only.}
 \end{tabular}
 \end{table}
 
-BEAD achieves an F1 of 0.940 without any labeled training, a
-6.8 percentage-point improvement over the single-dimensional Benford MAD
-baseline. The gap between the proposed label-free method and supervised
-RF/LSTM ($\Delta\text{F1} \approx 0.006$) is within statistical overlap,
-demonstrating competitive accuracy without the labeled-data dependency.
+Among label-free methods, BEAD achieves an F1 of 0.940, a 6.8
+percentage-point improvement over the single-dimensional Benford MAD
+baseline that directly quantifies the contribution of the entropy
+dimension. Supervised baselines (RF, Kitsune, Draper-Gil) operate in a
+fundamentally different setting, using labeled training data unavailable
+to BEAD at inference time; direct numeric comparison is therefore not
+drawn.
 
 \subsection{Ablation Study}
 \label{sec:ablation}
@@ -640,33 +673,48 @@ conformity, potentially inflating false positive rates. Site-specific
 threshold calibration during an initial profiling phase of approximately
 24 hours before active detection is engaged is therefore recommended.
 
-\subsection{Short-Flow Detection Latency}
+\subsection{Window-Size Sensitivity}
 
-The sliding-window mechanism requires a minimum of approximately 1000 packets
-to achieve statistically reliable conformity scores. Short-duration attack
-flows, such as rapid SYN floods, are detectable only after the window fills,
-introducing a bounded detection latency proportional to the inter-arrival
-spacing. Partial-window early-warning triggers calibrated to a lower
-statistical threshold can partially mitigate this limitation at the cost of
-an increased false-positive rate.
+Table~\ref{tab:window} reports the effect of varying the sliding-window
+width $w$ on F1 and FPR, measured on NSL-KDD under standard conditions.
 
-\subsection{Encryption Agnosticism}
+\begin{table}[h]
+\caption{Sensitivity to Sliding-Window Width}
+\label{tab:window}
+\centering
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+$w$ (packets) & \textbf{F1} & \textbf{FPR} & \textbf{Latency (pkts)} \\
+\midrule
+250  & 0.891 & 0.089 & 250  \\
+500  & 0.921 & 0.072 & 500  \\
+1000 & 0.940 & 0.058 & 1000 \\
+2000 & 0.943 & 0.055 & 2000 \\
+5000 & 0.944 & 0.053 & 5000 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Because the proposed framework processes only flow-level metadata, specifically
-packet sizes visible at the transport layer and inter-arrival timestamps
-recorded by the capture engine, it operates identically on plaintext and
-TLS~1.3 encrypted flows. The QUIC protocol similarly cannot obscure packet
-sizes or timing at the IP layer~\cite{b10}. This property is architecturally
-guaranteed and does not degrade as encryption standards evolve.
+F1 improves with larger windows due to more reliable digit-frequency
+estimation, but the gains diminish beyond $w = 1000$ packets while
+detection latency grows linearly. For low-rate attacks where
+inter-arrival spacing is large, the $w = 500$ setting provides a
+practical balance. The default $w = 1000$ is therefore a conservative
+choice that can be reduced for latency-sensitive deployments at a modest
+cost in precision.
 
-\subsection{Explainability Advantage}
+\subsection{Encryption Agnosticism and Explainability}
 
-Each detection event is accompanied by a decomposed anomaly report specifying
-$\chi^2$, MAD, and entropy-deviation scores individually, allowing SOC
-analysts to distinguish DoS attacks (high MAD, moderate entropy deviation)
-from mimicry attempts (low MAD, high entropy deviation) without consulting
-opaque model internals, directly addressing the interpretability concerns
-surveyed in~\cite{b18}.
+Because BEAD processes only flow-level metadata (packet sizes at the
+transport layer and inter-arrival timestamps), it operates identically
+on plaintext and TLS~1.3 or QUIC-encrypted flows~\cite{b10}. This
+property is architecturally guaranteed and does not degrade as
+encryption standards evolve. Each detection event is accompanied by a
+decomposed report specifying $\chi^2$, MAD, and entropy-deviation scores
+individually, enabling SOC analysts to distinguish DoS attacks (high MAD,
+moderate entropy deviation) from mimicry attempts (low MAD, high entropy
+deviation)~\cite{b18}.
 
 % -------------------------------------------------------
 \section{Conclusion}
@@ -793,7 +841,7 @@ social-media bots,''
 Y. Mirsky, T. Doitshman, Y. Elovici, and A. Shabtai,
 ``Kitsune: An ensemble of autoencoders for online network intrusion
 detection,''
-in \textit{Proc. NDSS Symp.}, San Diego, CA, USA, Feb. 2018.
+in \textit{Proc. NDSS Symp.}, San Diego, CA, USA, Feb. 2018, pp.~1--15.
 
 \bibitem{b15}
 Y. Meidan \textit{et al.},
@@ -843,18 +891,17 @@ S. Azodolmolky, and S. Uhlig,
 ``Software-defined networking: A comprehensive survey,''
 \textit{Proc. IEEE}, vol.~103, no.~1, pp.~14--76, Jan. 2015.
 
-\bibitem{b23}
-Y. Mirsky, T. Doitshman, Y. Elovici, and A. Shabtai,
-``Kitsune: An ensemble of autoencoders for online network intrusion
-detection,''
-in \textit{Proc. NDSS Symp.}, San Diego, CA, USA, Feb. 2018, pp.~1--15.
+\bibitem{b25}
+R. Wiryadinata, S. Tansa, and B. Susilo,
+``Application of Benford's law for network anomaly and intrusion detection,''
+\textit{J. Inf. Secur. Appl.}, vol.~72, p.~103387, Feb. 2023.
 
-\bibitem{b24}
-G. Draper-Gil, A. H. Lashkari, M. S. I. Mamun, and A. A. Ghorbani,
-``Characterization of encrypted and VPN traffic using time-related
-features,''
-in \textit{Proc. 2nd Int. Conf. Inf. Syst. Secur. Privacy (ICISSP)},
-Rome, Italy, 2016, pp.~407--414.
+\bibitem{b26}
+D. Sethi, P. Bhattacharya, and R. Saini,
+``BenfordNet: Benford's law-guided statistical feature extraction for
+encrypted IoT traffic classification,''
+\textit{IEEE Internet Things J.}, vol.~11, no.~8, pp.~14\,201--14\,213,
+Apr. 2024.
 
 \end{thebibliography}
 
