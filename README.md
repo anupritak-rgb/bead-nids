@@ -7,8 +7,8 @@ malicious traffic — without payload decryption.
 
 This repository accompanies the IEEE conference paper:
 
-> **"Statistical Anomaly Detection in Encrypted Network Traffic Using Benford's Law
-> and Entropic Hybrid Analysis"**
+> **"BEAD: A Benford-Entropic Anomaly Detector for Mimicry-Resistant Intrusion
+> Detection in Encrypted Network Traffic"**
 > Anuprita S. Korde, Irfan Siddavatam
 > K.J. Somaiya School of Engineering, Somaiya Vidyavihar University, Mumbai
 
@@ -129,8 +129,8 @@ If this work is useful in your research, please cite:
 
 ```
 @inproceedings{korde2025bead,
-  title     = {Statistical Anomaly Detection in Encrypted Network Traffic
-               Using Benford's Law and Entropic Hybrid Analysis},
+  title     = {{BEAD}: A Benford-Entropic Anomaly Detector for
+               Mimicry-Resistant Intrusion Detection in Encrypted Network Traffic},
   author    = {Korde, Anuprita S. and Siddavatam, Irfan},
   booktitle = {Proc. IEEE Conf.},
   year      = {2025}
